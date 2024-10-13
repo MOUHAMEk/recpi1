@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site d'Inspection</title>
+    <style>
+        /* Style général du site */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Mise en forme de la page principale */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        /* Style des titres */
+        h1, h2 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Style des boutons */
+        button {
+            background-color: #28a745; /* Vert */
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 16px;
+            margin: 10px auto;
+            display: block;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        button:hover {
+            background-color: #218838; /* Vert foncé */
+            transform: translateY(-2px);
+        }
+
+        /* Style des boutons spécifiques */
+        .taskButton {
+            background-color: #007bff; /* Bleu */
+            width: 100%;
+        }
+
+        .taskButton:hover {
+            background-color: #0056b3; /* Bleu foncé */
+        }
+
+        .verifyButton {
+            background-color: #28a745; /* Vert */
+            width: 48%;
+            margin-right: 4%;
+        }
+
+        .verifyButton:last-child {
+            margin-right: 0;
+        }
+
+        .verifyButtonWithReserve {
+            background-color: #dc3545; /* Rouge */
+            width: 48%;
+        }
+
+        .verifyButtonWithReserve:hover {
+            background-color: #c82333; /* Rouge foncé */
+        }
+
+        /* Style des champs de saisie */
+        input[type="date"],
+        select,
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        /* Style des étapes cachées */
+        .hidden {
+            display: none;
+        }
+
+        /* Style des sections d'étapes */
+        .step {
+            margin-top: 20px;
+        }
+
+        /* Style des vérifications */
+        .verifier {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border: 1px solid #ced4da;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .verifier label {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .verification-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .verification-status {
+            margin-top: 10px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-verified {
+            color: #28a745; /* Vert */
+            font-weight: bold;
+        }
+
+        .status-with-reserve {
+            color: #dc3545; /* Rouge */
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .reserveInput {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            display: none;
+        }
+
+        /* Styles réactifs pour les écrans mobiles */
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+
+            button {
+                width: 100%;
+                max-width: none;
+            }
+
+            .verification-buttons {
+                flex-direction: column;
+            }
+
+            .verifyButton,
+            .verifyButtonWithReserve {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenue dans le Système d'Inspection</h1>
+        <button id="startButton">Commencer</button>
+
+        <div id="daySelection" class="hidden step">
+            <h2>Choisissez le jour de votre inspection :</h2>
+            <input type="date" id="inspectionDate" required>
+            <button id="continueDayButton">Continuer</button>
+        </div>
+
+        <div id="elementSelection" class="hidden step">
+            <h2>Qu'est-ce que vous allez inspecter ce jour ?</h2>
+            <select id="constructionElement">
+                <option value="">Sélectionnez un élément</option>
+                <option value="fondaion , semelles">fondaion , semelles</option>
+                <option value="poteaux">Poteaux</option>
+                <option value="poutres">Poutres</option>
+                <option value="plancher">Plancher</option>
+                <option value="escaliers">Escaliers</option>
+                <option value="ascenseur">Ascenseur</option>
+                <option value="maconnerie">maconnerie</option>
+            </select>
+            <input type="text" id="elementName" placeholder="Entrez le nom de l'élément" required>
+            <button id="continueElementButton">Continuer</button>
+        </div>
+
+        <div id="inspectionTasks" class="hidden step">
+            <h2>Dans cet élément, vous allez inspecter :</h2>
+            <button class="taskButton" data-task="coffrage">Coffrage</button>
+            <button class="taskButton" data-task="ferraillage">Ferraillage</button>
+            <button class="taskButton" data-task="coulage">Coulage</button>
+        </div>
+
+        <div id="verificationSection" class="hidden step">
+            <h2 id="verificationHeader"></h2>
+            <div id="verificationTasks"></div>
+            <button id="sendDataButton">Envoyer les données</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+
+    // Configuration Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgrLBx_yB617KhpgRv0VGHGvIWf_w2pvM",
+        authDomain: "archive-371ec.firebaseapp.com",
+        projectId: "archive-371ec",
+        storageBucket: "archive-371ec.appspot.com",
+        messagingSenderId: "913144277477",
+        appId: "1:913144277477:web:3f26e18cfe5bae704d670c",
+        measurementId: "G-ZK7Z6T5J3C"
+    };
+
+    // Initialisation de Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    document.getElementById('startButton').addEventListener('click', () => {
+        document.getElementById('daySelection').classList.remove('hidden');
+        document.getElementById('startButton').classList.add('hidden');
+    });
+
+    document.getElementById('continueDayButton').addEventListener('click', () => {
+        const selectedDate = document.getElementById('inspectionDate').value;
+        if (selectedDate) {
+            document.getElementById('elementSelection').classList.remove('hidden');
+            document.getElementById('daySelection').classList.add('hidden');
+        } else {
+            alert('Veuillez sélectionner une date pour continuer.');
+        }
+    });
+
+    document.getElementById('continueElementButton').addEventListener('click', () => {
+        const selectedElement = document.getElementById('constructionElement').value;
+        const elementName = document.getElementById('elementName').value;
+        if (selectedElement && elementName) {
+            document.getElementById('inspectionTasks').classList.remove('hidden');
+            document.getElementById('elementSelection').classList.add('hidden');
+        } else {
+            alert('Veuillez sélectionner un élément de construction et entrer un nom.');
+        }
+    });
+
+    document.querySelectorAll('.taskButton').forEach(button => {
+        button.addEventListener('click', () => {
+            const task = button.getAttribute('data-task');
+            const selectedElement = document.getElementById('constructionElement').value;
+            document.getElementById('verificationHeader').innerText = `Vérifiez ${task} :`;
+            document.getElementById('verificationTasks').innerHTML = getVerificationTasks(selectedElement, task);
+            document.getElementById('verificationSection').classList.remove('hidden');
+            document.getElementById('inspectionTasks').classList.add('hidden');
+        });
+    });
+
+    function getVerificationTasks(element, task) {
+        let tasks = "";
+
+        // Coffrage Tasks
+        if (task === "coffrage") {
+            if (element === "poteaux") {
+                tasks = `
+                    <div class="verifier">
+                        <h1>ndndndndndn</h1>
+                        <label>Contrôle des dimensions des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>bla bla bla</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "fondaion , semelles") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            } else if (element === "poutres") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "plancher") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "escaliers") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "maconnerie") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "ascenseur") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            }
+        }
+       
+        // feraillage Tasks
+        if (task === "ferraillage") {
+            if (element === "poteaux") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "fondaion , semelles") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            } else if (element === "poutres") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "plancher") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "escaliers") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "maconnerie") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "ascenseur") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            }
+        }
+
+        // coulage Tasks
+        if (task === "coulage") {
+            if (element === "poteaux") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poteaux</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "fondaion , semelles") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            } else if (element === "poutres") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "plancher") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "escaliers") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "maconnerie") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+                } else if (element === "ascenseur") {
+                tasks = `
+                    <div class="verifier">
+                        <label>Contrôle des dimensions des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="1">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="1">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>
+                    <div class="verifier">
+                        <label>Contrôle de l'alignement des poutres</label>
+                        <div class="verification-buttons">
+                            <button class="verifyButton" data-task="${task}" data-verification="2">Vérifié sans réserve</button>
+                            <button class="verifyButtonWithReserve" data-task="${task}" data-verification="2">Vérifié avec réserve</button>
+                        </div>
+                        <input type="text" class="reserveInput" placeholder="Entrez la réserve" />
+                        <div class="verification-status"></div>
+                    </div>`;
+            }
+        }
+
+       
+
+        // Ajoutez ici d'autres tâches de vérification selon l'élément et la tâche sélectionnés
+
+        return tasks;
+    }
+
+        // Gestion des clics sur les boutons de vérification
+        document.getElementById('verificationTasks').addEventListener('click', (event) => {
+            if (event.target.classList.contains('verifyButton')) {
+                const verifierDiv = event.target.closest('.verifier');
+                const statusElement = verifierDiv.querySelector('.verification-status');
+                const reserveInput = verifierDiv.querySelector('.reserveInput');
+
+                // Modifier le statut
+                statusElement.innerHTML = "✅ Vérifié sans réserve";
+                statusElement.classList.add("status-verified");
+
+                // Masquer les boutons de vérification
+                const verificationButtons = verifierDiv.querySelector('.verification-buttons');
+                verificationButtons.style.display = 'none';
+            } else if (event.target.classList.contains('verifyButtonWithReserve')) {
+                const verifierDiv = event.target.closest('.verifier');
+                const statusElement = verifierDiv.querySelector('.verification-status');
+                const reserveInput = verifierDiv.querySelector('.reserveInput');
+
+                // Modifier le statut
+                statusElement.innerHTML = "⚠️ Vérifié avec réserve";
+                statusElement.classList.add("status-with-reserve");
+
+                // Masquer le bouton "Vérifié sans réserve"
+                const verificationButtons = verifierDiv.querySelector('.verification-buttons');
+                const verifyButton = verificationButtons.querySelector('.verifyButton');
+                verifyButton.style.display = 'none';
+
+                // Afficher le champ de saisie pour la réserve
+                reserveInput.style.display = 'block';
+            }
+        });
+
+        // Gestion de l'envoi des données
+        document.getElementById('sendDataButton').addEventListener('click', () => {
+            const date = document.getElementById('inspectionDate').value;
+            const element = document.getElementById('constructionElement').value;
+            const elementName = document.getElementById('elementName').value;
+            const verifications = [];
+
+            document.querySelectorAll('.verifier').forEach(verifier => {
+                const task = verifier.querySelector('label').innerText;
+                const status = verifier.querySelector('.verification-status').innerText;
+                const reserve = verifier.querySelector('.reserveInput').value;
+                verifications.push({ task, status, reserve });
+            });
+
+            // Vérification des champs obligatoires
+            if (!date || !element || !elementName) {
+                alert('Veuillez remplir tous les champs avant d\'envoyer les données.');
+                return;
+            }
+
+            // Vérifier que toutes les tâches sont vérifiées
+            for (let verification of verifications) {
+                if (!verification.status) {
+                    alert('Veuillez vérifier toutes les tâches avant d\'envoyer les données.');
+                    return;
+                }
+                if (verification.status.includes('avec réserve') && !verification.reserve) {
+                    alert('Veuillez entrer la réserve pour toutes les tâches vérifiées avec réserve.');
+                    return;
+                }
+            }
+
+            // Stocker dans Firebase
+            const inspectionData = {
+                date: date,
+                element: element,
+                elementName: elementName,
+                verifications: verifications
+            };
+
+            const inspectionRef = ref(database, 'inspections/' + Date.now());
+            set(inspectionRef, inspectionData).then(() => {
+                alert('Données envoyées avec succès !');
+                location.reload(); // Recharge la page après l'envoi
+            }).catch((error) => {
+                console.error('Erreur lors de l\'envoi des données :', error);
+                alert('Erreur lors de l\'envoi des données. Veuillez réessayer.');
+            });
+        });
+    </script>
+</body>
+</html>
